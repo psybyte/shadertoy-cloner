@@ -78,12 +78,13 @@ jobs:
           $version = "${{ steps.version.outputs.VERSION }}"
           # Chocolatey does not refresh PATH in the same shell session;
           # use the known NSIS install path directly.
-          $makensis = "$env:ProgramFiles(x86)\NSIS\makensis.exe"
+          # NOTE: curly braces are required for env vars that contain parentheses.
+          $makensis = "${env:ProgramFiles(x86)}\NSIS\makensis.exe"
           if (-not (Test-Path $makensis)) {
             $makensis = "$env:ProgramFiles\NSIS\makensis.exe"
           }
           if (-not (Test-Path $makensis)) {
-            Write-Error "makensis.exe not found. Searched: $env:ProgramFiles(x86)\NSIS and $env:ProgramFiles\NSIS"
+            Write-Error "makensis.exe not found. Searched: ${env:ProgramFiles(x86)}\NSIS and $env:ProgramFiles\NSIS"
             exit 1
           }
           & $makensis /DVERSION=$version installer\installer.nsi

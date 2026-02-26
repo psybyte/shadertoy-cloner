@@ -1,6 +1,13 @@
 ; ============================================================
 ;  ShaderToy Cloner – Windows Installer (NSIS)
 ;  Build:  makensis /DVERSION=x.y.z installer\installer.nsi
+;
+;  Before invoking makensis the workflow copies:
+;    icon.ico               → installer\icon.ico
+;    dist\shadertoy-cloner.exe → installer\shadertoy-cloner.exe
+;  so that every File/Icon reference here is a plain filename
+;  with no ".." navigation (NSIS sets CWD to the .nsi directory
+;  and does not normalise paths containing "..").
 ; ============================================================
 
 Unicode True
@@ -10,12 +17,6 @@ Unicode True
 !ifndef VERSION
   !define VERSION "1.0.0"
 !endif
-
-; __FILEDIR__ is the absolute path to the directory containing this .nsi file.
-; All source paths are anchored to it so the script works regardless of where
-; makensis is invoked from.
-!define SRCDIR   "${__FILEDIR__}"
-!define ROOTDIR  "${__FILEDIR__}\.."
 
 !define APP_NAME     "ShaderToy Cloner"
 !define APP_EXE      "shadertoy-cloner.exe"
@@ -33,7 +34,12 @@ Unicode True
 
 RequestExecutionLevel admin
 Name             "${APP_NAME} ${VERSION}"
-OutFile          "${ROOTDIR}\dist\ShaderToy-Cloner-Setup-${VERSION}.exe"
+
+; Output goes one level up into the dist\ folder that already exists.
+; NSIS handles forward slashes and the ..\ here because OutFile is an output
+; path resolved by the OS, not an NSIS include/File read operation.
+OutFile          "..\dist\ShaderToy-Cloner-Setup-${VERSION}.exe"
+
 InstallDir       "$PROGRAMFILES64\${APP_NAME}"
 InstallDirRegKey HKLM "${REGKEY}" "InstallLocation"
 BrandingText     "${APP_NAME} ${VERSION}"
@@ -41,8 +47,8 @@ BrandingText     "${APP_NAME} ${VERSION}"
 ; ── MUI Settings ─────────────────────────────────────────────────────────────
 
 !define MUI_ABORTWARNING
-!define MUI_ICON    "${ROOTDIR}\icon.ico"
-!define MUI_UNICON  "${ROOTDIR}\icon.ico"
+!define MUI_ICON    "icon.ico"
+!define MUI_UNICON  "icon.ico"
 
 !define MUI_WELCOMEPAGE_TITLE  "Welcome to ${APP_NAME} ${VERSION} Setup"
 !define MUI_WELCOMEPAGE_TEXT   "This will install ${APP_NAME} on your computer as a Windows service that starts automatically with Windows.$\r$\n$\r$\nOnce installed, open http://localhost:7700 in your browser to manage your shaders.$\r$\n$\r$\nClick Next to continue."
@@ -88,12 +94,12 @@ Section "Install" SecMain
     ExecWait 'sc delete "${SERVICE_NAME}"'
     Sleep 1500
 
-  ; ── Copy files ──────────────────────────────────────────────────────────────
+  ; ── Copy files (all staged in installer\ by the workflow) ───────────────────
 
   copy_files:
-  File "${ROOTDIR}\dist\${APP_EXE}"
-  File "${SRCDIR}\nssm.exe"
-  File "${ROOTDIR}\icon.ico"
+  File "${APP_EXE}"
+  File "nssm.exe"
+  File "icon.ico"
 
   ; ── Create data directories ─────────────────────────────────────────────────
 

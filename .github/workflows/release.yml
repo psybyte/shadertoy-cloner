@@ -76,17 +76,24 @@ jobs:
         shell: pwsh
         run: |
           $version = "${{ steps.version.outputs.VERSION }}"
-          # Chocolatey does not refresh PATH in the same shell session;
-          # use the known NSIS install path directly.
+
+          # Stage all source files inside installer\ so NSIS can use plain
+          # relative paths with no ".." navigation (NSIS does not normalise
+          # paths containing ".." and CWD is set to the .nsi file's folder).
+          Copy-Item "icon.ico"                    -Destination "installer\icon.ico"        -Force
+          Copy-Item "dist\shadertoy-cloner.exe"   -Destination "installer\shadertoy-cloner.exe" -Force
+
+          # Chocolatey does not refresh PATH in the same shell session.
           # NOTE: curly braces are required for env vars that contain parentheses.
           $makensis = "${env:ProgramFiles(x86)}\NSIS\makensis.exe"
           if (-not (Test-Path $makensis)) {
             $makensis = "$env:ProgramFiles\NSIS\makensis.exe"
           }
           if (-not (Test-Path $makensis)) {
-            Write-Error "makensis.exe not found. Searched: ${env:ProgramFiles(x86)}\NSIS and $env:ProgramFiles\NSIS"
+            Write-Error "makensis.exe not found"
             exit 1
           }
+
           & $makensis /DVERSION=$version installer\installer.nsi
           Write-Host "Installer built: dist\ShaderToy-Cloner-Setup-$version.exe"
 

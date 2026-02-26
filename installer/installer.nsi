@@ -11,17 +11,18 @@ Unicode True
   !define VERSION "1.0.0"
 !endif
 
+; __FILEDIR__ is the absolute path to the directory containing this .nsi file.
+; All source paths are anchored to it so the script works regardless of where
+; makensis is invoked from.
+!define SRCDIR   "${__FILEDIR__}"
+!define ROOTDIR  "${__FILEDIR__}\.."
+
 !define APP_NAME     "ShaderToy Cloner"
 !define APP_EXE      "shadertoy-cloner.exe"
 !define SERVICE_NAME "ShaderToy Cloner"
 !define APP_URL      "http://localhost:7700"
 !define PUBLISHER    "ShaderToy Cloner"
 !define REGKEY       "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_NAME}"
-
-; ── Resolve paths relative to the repository root ────────────────────────────
-
-; __FILEDIR__ is the directory that contains this .nsi file (installer\)
-!cd "${__FILEDIR__}\.."
 
 ; ── Includes ─────────────────────────────────────────────────────────────────
 
@@ -32,7 +33,7 @@ Unicode True
 
 RequestExecutionLevel admin
 Name             "${APP_NAME} ${VERSION}"
-OutFile          "dist\ShaderToy-Cloner-Setup-${VERSION}.exe"
+OutFile          "${ROOTDIR}\dist\ShaderToy-Cloner-Setup-${VERSION}.exe"
 InstallDir       "$PROGRAMFILES64\${APP_NAME}"
 InstallDirRegKey HKLM "${REGKEY}" "InstallLocation"
 BrandingText     "${APP_NAME} ${VERSION}"
@@ -40,16 +41,16 @@ BrandingText     "${APP_NAME} ${VERSION}"
 ; ── MUI Settings ─────────────────────────────────────────────────────────────
 
 !define MUI_ABORTWARNING
-!define MUI_ICON    "icon.ico"
-!define MUI_UNICON  "icon.ico"
+!define MUI_ICON    "${ROOTDIR}\icon.ico"
+!define MUI_UNICON  "${ROOTDIR}\icon.ico"
 
 !define MUI_WELCOMEPAGE_TITLE  "Welcome to ${APP_NAME} ${VERSION} Setup"
 !define MUI_WELCOMEPAGE_TEXT   "This will install ${APP_NAME} on your computer as a Windows service that starts automatically with Windows.$\r$\n$\r$\nOnce installed, open http://localhost:7700 in your browser to manage your shaders.$\r$\n$\r$\nClick Next to continue."
 
-!define MUI_FINISHPAGE_RUN          "explorer.exe"
+!define MUI_FINISHPAGE_RUN           "explorer.exe"
 !define MUI_FINISHPAGE_RUN_PARAMETERS "${APP_URL}"
-!define MUI_FINISHPAGE_RUN_TEXT     "Open ShaderToy Cloner in browser"
-!define MUI_FINISHPAGE_SHOWREADME   ""
+!define MUI_FINISHPAGE_RUN_TEXT      "Open ShaderToy Cloner in browser"
+!define MUI_FINISHPAGE_SHOWREADME    ""
 
 ; ── Pages ─────────────────────────────────────────────────────────────────────
 
@@ -90,9 +91,9 @@ Section "Install" SecMain
   ; ── Copy files ──────────────────────────────────────────────────────────────
 
   copy_files:
-  File "dist\${APP_EXE}"
-  File "installer\nssm.exe"
-  File "icon.ico"
+  File "${ROOTDIR}\dist\${APP_EXE}"
+  File "${SRCDIR}\nssm.exe"
+  File "${ROOTDIR}\icon.ico"
 
   ; ── Create data directories ─────────────────────────────────────────────────
 

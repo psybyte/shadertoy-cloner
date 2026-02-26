@@ -7,8 +7,12 @@ const path = require('path');
 
 const app = express();
 const DEFAULT_PORT = 7700;
-const DATA_DIR = path.join(__dirname, 'data');
-const SHADERS_DIR = path.join(DATA_DIR, 'shaders');
+
+// When bundled with pkg the snapshot filesystem is read-only, so data files
+// must live next to the executable on the real filesystem.
+const BASE_DIR  = process.pkg ? path.dirname(process.execPath) : __dirname;
+const DATA_DIR     = path.join(BASE_DIR, 'data');
+const SHADERS_DIR  = path.join(DATA_DIR, 'shaders');
 const SETTINGS_FILE = path.join(DATA_DIR, 'settings.json');
 
 app.use(express.json());

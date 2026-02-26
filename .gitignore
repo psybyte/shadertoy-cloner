@@ -11,6 +11,12 @@ daemon/
 # Runtime data
 data/shaders/
 
+# Build output
+dist/
+
+# Bundled NSSM binary (downloaded during CI build)
+installer/nssm.exe
+
 # Logs
 logs/
 *.log

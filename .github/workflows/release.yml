@@ -1,0 +1,117 @@
+name: Build and Release Installer
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-installer:
+    name: Build Windows Installer
+    runs-on: windows-latest
+
+    steps:
+      # ── Checkout ─────────────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── Node.js ──────────────────────────────────────────────────────────────
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install @yao-pkg/pkg
+        run: npm install --save-dev @yao-pkg/pkg
+
+      # ── Build standalone exe ─────────────────────────────────────────────────
+      - name: Build standalone server executable
+        run: npx pkg . --targets node20-win-x64 --output dist/shadertoy-cloner.exe
+
+      # ── Download NSSM (service wrapper) ──────────────────────────────────────
+      - name: Download and extract NSSM
+        shell: pwsh
+        run: |
+          $nssmUrl = "https://nssm.cc/release/nssm-2.24.zip"
+          $zipPath  = "$env:TEMP\nssm.zip"
+          Invoke-WebRequest -Uri $nssmUrl -OutFile $zipPath -UseBasicParsing
+          Expand-Archive -Path $zipPath -DestinationPath "$env:TEMP\nssm-extract" -Force
+          Copy-Item "$env:TEMP\nssm-extract\nssm-2.24\win64\nssm.exe" -Destination "installer\nssm.exe"
+          Write-Host "NSSM copied to installer\nssm.exe"
+
+      # ── Extract version from tag ──────────────────────────────────────────────
+      - name: Extract version from tag
+        id: version
+        shell: pwsh
+        run: |
+          $tag = $env:GITHUB_REF_NAME          # e.g. v1.2.3
+          $ver = $tag -replace '^v', ''         # e.g. 1.2.3
+          echo "VERSION=$ver" >> $env:GITHUB_OUTPUT
+          echo "TAG=$tag"     >> $env:GITHUB_OUTPUT
+          Write-Host "Building version: $ver"
+
+      # ── Build NSIS installer ──────────────────────────────────────────────────
+      - name: Install NSIS
+        run: choco install nsis --no-progress -y
+
+      - name: Build NSIS installer
+        shell: pwsh
+        run: |
+          $version = "${{ steps.version.outputs.VERSION }}"
+          makensis /DVERSION=$version installer\installer.nsi
+          Write-Host "Installer built: dist\ShaderToy-Cloner-Setup-$version.exe"
+
+      # ── Verify output ─────────────────────────────────────────────────────────
+      - name: Verify build output
+        shell: pwsh
+        run: |
+          $version = "${{ steps.version.outputs.VERSION }}"
+          $installer = "dist\ShaderToy-Cloner-Setup-$version.exe"
+          if (Test-Path $installer) {
+            $size = (Get-Item $installer).Length / 1MB
+            Write-Host "✓ Installer ready: $installer ($([math]::Round($size,1)) MB)"
+          } else {
+            Write-Error "✗ Installer not found: $installer"
+            exit 1
+          }
+
+      # ── Create GitHub Release ─────────────────────────────────────────────────
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.TAG }}
+          name: "ShaderToy Cloner ${{ steps.version.outputs.TAG }}"
+          body: |
+            ## ShaderToy Cloner ${{ steps.version.outputs.TAG }}
+
+            ### Installation
+            1. Download `ShaderToy-Cloner-Setup-${{ steps.version.outputs.VERSION }}.exe`
+            2. Run it as Administrator
+            3. Follow the setup wizard
+            4. The server starts automatically as a Windows service on port **7700**
+            5. Open **http://localhost:7700** to manage your shaders
+
+            ### What gets installed
+            - Windows service that starts automatically with Windows
+            - Start Menu and Desktop shortcuts to open the web interface
+            - Uninstaller registered in *Add or Remove Programs*
+
+            ### Uninstall
+            Use *Add or Remove Programs* → *ShaderToy Cloner* → Uninstall.
+            Your cloned shaders in the `data\` folder are preserved.
+
+            ### Requirements
+            - Windows 10 / 11 (x64)
+            - No additional software needed — Node.js is bundled
+          generate_release_notes: false
+          draft: false
+          prerelease: false
+          files: |
+            dist/ShaderToy-Cloner-Setup-${{ steps.version.outputs.VERSION }}.exe

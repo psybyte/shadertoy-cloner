@@ -1,0 +1,41 @@
+{
+  "Shader": {
+    "ver": "0.1",
+    "info": {
+      "id": "WXyBDV",
+      "date": "1772113662",
+      "viewed": 1,
+      "name": "Fork minimalist psyduck131 625",
+      "description": "Originally made as an animated background for my portfolio.",
+      "likes": 0,
+      "published": "Public API",
+      "usePreview": 0,
+      "tags": [
+        "sdf",
+        "starfield",
+        "minimalist",
+        "minimalism"
+      ],
+      "hasliked": 0,
+      "parentid": "wlKBWm",
+      "parentname": "minimalist starfield"
+    },
+    "renderpass": [
+      {
+        "inputs": [],
+        "outputs": [
+          {
+            "id": "4dfGRr",
+            "channel": 0
+          }
+        ],
+        "code": "// Author: paperu\n// Title: minimalist starfield\n\n#ifdef GL_ES\nprecision lowp float;\n#endif\n\nuniform vec2 u_resolution;\nuniform vec2 u_mouse;\nuniform float u_time;\n\n#define P 6.28318530717958\n\nfloat b(in vec2 p, in float s, in float r) { return length(abs(p) - s) - r; }\nmat2 rot(in float a){ return mat2(cos(a),sin(a),-sin(a),cos(a)); }\nfloat asympt(float x, float sp) { return x/(sp + x); }\n\nvoid mainImage(out vec4 fragColor, in vec2 fragCoord) {\n    vec2 st = (fragCoord.xy - .5*iResolution.xy)/iResolution.y;\n    float t = iTime*.25;\n    vec2 m = ((iMouse.xy - iResolution.xy*.5)/iResolution.y) + vec2(cos(.5*t),sin(.5*t))*.5;\n    float sz = 8.*(1. - m.y*.5);\n    float aa = sz/iResolution.y;\n    float tB = clamp(asympt(iTime - 1., 3.),0.,1.);\n\n    vec2 p = st + m*.5;\n    p *= rot(P*.125 + m.y*P*.125);\n    vec2 pF = floor(p*sz);\n    p = fract(p*sz) - .5;\n    p *= rot(pF.x*P*.333);\n    p = abs(p) - .042;\n    float d = b(p,.4*tB - (.5+.5*cos(length(pF)*10.5 - t))*.5,.05);\n    d = smoothstep(-aa,aa,abs(d) - aa*.25);\n    \n    fragColor = vec4(mix(vec3(0.023),vec3(1.),1.-d),1.);\n}",
+        "name": "Image",
+        "description": "",
+        "type": "image"
+      }
+    ]
+  },
+  "_clonedAt": "2026-02-26T13:59:45.361Z",
+  "_importedFrom": "local-export"
+}

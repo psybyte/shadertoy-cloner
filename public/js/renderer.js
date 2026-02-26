@@ -139,14 +139,36 @@ function applyTextureParams(gl, target, filter, wrap, vflip) {
   if (filter === 'mipmap') gl.generateMipmap(target);
 }
 
-async function loadImage(src) {
+function loadImageFromUrl(url) {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.onload  = () => resolve(img);
-    img.onerror = () => reject(new Error(`Failed to load image: ${src}`));
-    img.src = src;
+    img.onerror = () => reject(new Error(`Failed to load image: ${url}`));
+    img.src = url;
   });
+}
+
+/**
+ * Load an image from a ShaderToy resource path.
+ * Tries the local proxy first; if the proxy returns non-200 (e.g. CDN 403),
+ * falls back to loading directly from shadertoy.com in the browser so that
+ * the user's session cookies are included.
+ */
+async function loadImage(shadertoyPath) {
+  const proxyUrl  = `/proxy${shadertoyPath}`;
+  const directUrl = `https://www.shadertoy.com${shadertoyPath}`;
+
+  // Fast-check: HEAD the proxy to see if it can serve the file
+  try {
+    const res = await fetch(proxyUrl, { method: 'HEAD' });
+    if (res.ok) {
+      return loadImageFromUrl(proxyUrl);
+    }
+  } catch (_) { /* network error — fall through */ }
+
+  // Proxy unavailable or returned an error — try the CDN directly
+  return loadImageFromUrl(directUrl);
 }
 
 async function loadTexture2D(gl, src, filter, wrap, vflip) {
@@ -157,8 +179,7 @@ async function loadTexture2D(gl, src, filter, wrap, vflip) {
     new Uint8Array([20, 20, 20, 255]));
 
   try {
-    const proxySrc = `/proxy${src}`;
-    const img = await loadImage(proxySrc);
+    const img = await loadImage(src);
 
     gl.bindTexture(gl.TEXTURE_2D, tex);
     if (vflip === 'true' || vflip === true) {
@@ -185,11 +206,12 @@ const CUBE_FACES = [
 ];
 
 async function loadTextureCube(gl, baseSrc, filter, wrap) {
-  // ShaderToy cubemap src looks like "/presets/cube00_0.jpg"
-  // Faces are numbered _0 to _5
-  const base = baseSrc.replace(/_\d+\./, '_');
+  // ShaderToy cubemap face layout:
+  //   Preset paths:     /presets/cube00_0.jpg  (6 separate face images, _0 to _5)
+  //   Media/a paths:    /media/a/hash.png      (try _0 to _5 first; fall back to single image)
   const ext  = baseSrc.split('.').pop();
   const stem = baseSrc.replace(/\.[^.]+$/, '').replace(/_\d+$/, '');
+  const hasFaceSuffix = /_\d+\./.test(baseSrc);
 
   const tex = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_CUBE_MAP, tex);
@@ -199,14 +221,26 @@ async function loadTextureCube(gl, baseSrc, filter, wrap) {
       new Uint8Array([20, 20, 20, 255]));
   }
 
+  // Load all 6 faces; loadImage handles proxy-vs-direct fallback per face.
+  // If a face doesn't exist as a numbered file, loadImage will fail and we warn.
   await Promise.all(CUBE_FACES.map(async (faceFn, i) => {
-    const faceSrc = `/proxy${stem}_${i}.${ext}`;
     try {
-      const img = await loadImage(faceSrc);
+      const img = await loadImage(`${stem}_${i}.${ext}`);
       gl.bindTexture(gl.TEXTURE_CUBE_MAP, tex);
       gl.texImage2D(faceFn(gl), 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
-    } catch (err) {
-      console.warn(`[renderer] cubemap face ${i} failed:`, err.message);
+    } catch (_) {
+      // Face-numbered file not found — try the base path as a single-image cubemap
+      if (i === 0) {
+        try {
+          const img = await loadImage(baseSrc);
+          gl.bindTexture(gl.TEXTURE_CUBE_MAP, tex);
+          for (const fn of CUBE_FACES) {
+            gl.texImage2D(fn(gl), 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+          }
+        } catch (err2) {
+          console.warn(`[renderer] cubemap load failed (${baseSrc}):`, err2.message);
+        }
+      }
     }
   }));
 
@@ -248,6 +282,20 @@ function resizeDoubleBuffer(gl, db, w, h) {
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, w, h, 0, gl.RGBA, gl.FLOAT, null);
   }
   db.w = w; db.h = h;
+}
+
+// ── Input normalizer (handles API format vs. export format) ──────────────────
+// API format:    { src, filter, wrap, vflip, ... }
+// Export format: { filepath, sampler: { filter, wrap, vflip }, ... }
+function normalizeInput(inp) {
+  const sampler = inp.sampler || {};
+  return {
+    ...inp,
+    src:    inp.src    || inp.filepath || '',
+    filter: inp.filter || sampler.filter || 'linear',
+    wrap:   inp.wrap   || sampler.wrap   || 'clamp',
+    vflip:  inp.vflip  !== undefined ? inp.vflip : (sampler.vflip !== undefined ? sampler.vflip : 'false'),
+  };
 }
 
 // ── Main class ────────────────────────────────────────────────────────────────
@@ -311,10 +359,15 @@ class ShaderRenderer {
       }
     }
 
+    // Normalize inputs across all passes (handles both API and export formats)
+    const allPassesRaw = [...bufferPasses, imagePass];
+    for (const pass of allPassesRaw) {
+      pass.inputs = (pass.inputs || []).map(normalizeInput);
+    }
+
     // Pre-load static textures (all passes)
-    const allPasses = [...bufferPasses, imagePass];
-    for (const pass of allPasses) {
-      for (const inp of (pass.inputs || [])) {
+    for (const pass of allPassesRaw) {
+      for (const inp of pass.inputs) {
         if (inp.type === 'texture' || inp.type === 'cubemap') {
           if (!this._texCache[inp.src]) {
             this._texCache[inp.src] = inp.type === 'cubemap'

@@ -172,18 +172,32 @@ app.get('/proxy/*', async (req, res) => {
   try {
     const response = await axios.get(remoteUrl, {
       responseType: 'arraybuffer',
-      timeout: 10000,
+      timeout: 15000,
+      maxRedirects: 5,
       headers: {
-        'User-Agent':
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        Referer: 'https://www.shadertoy.com/',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+        'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Referer': 'https://www.shadertoy.com/',
+        'Origin': 'https://www.shadertoy.com',
+        'Sec-Fetch-Dest': 'image',
+        'Sec-Fetch-Mode': 'no-cors',
+        'Sec-Fetch-Site': 'same-origin',
+        'Cache-Control': 'no-cache',
       },
     });
     res.setHeader('Content-Type', response.headers['content-type'] || 'application/octet-stream');
     res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.setHeader('Access-Control-Allow-Origin', '*');
     res.send(Buffer.from(response.data));
   } catch (err) {
-    res.status(502).json({ error: `Proxy error: ${err.message}` });
+    const status = err.response ? err.response.status : 502;
+    const message = err.response
+      ? `Upstream returned ${err.response.status} for ${remoteUrl}`
+      : `Proxy error: ${err.message}`;
+    console.warn(`[proxy] ${message}`);
+    res.status(status).json({ error: message });
   }
 });
 

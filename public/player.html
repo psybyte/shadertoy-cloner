@@ -57,10 +57,11 @@
 
   <div id="overlay">
     <div id="overlay-icon">⬡</div>
-    <div id="overlay-msg">Cargando shader…</div>
+    <div id="overlay-msg" data-i18n="player.loading">Loading shader…</div>
     <div id="overlay-detail"></div>
   </div>
 
+  <script src="/js/i18n.js"></script>
   <script src="/js/renderer.js"></script>
   <script>
     (async () => {
@@ -72,7 +73,7 @@
 
       const shaderId = location.pathname.split('/').pop();
       if (!shaderId) {
-        overlayMsg.textContent = 'ID de shader no especificado';
+        overlayMsg.textContent = t('player.no.id');
         return;
       }
 
@@ -82,7 +83,7 @@
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         shaderData = await res.json();
       } catch (err) {
-        overlayMsg.textContent = 'No se encontró el shader';
+        overlayMsg.textContent = t('player.not.found');
         overlayDetail.textContent = err.message;
         return;
       }
@@ -95,7 +96,7 @@
         renderer = new ShaderRenderer(canvas);
         await renderer.load(shaderData);
       } catch (err) {
-        overlayMsg.textContent = 'Error al compilar el shader';
+        overlayMsg.textContent = t('player.compile.error');
         overlayDetail.textContent = err.message;
         console.error(err);
         return;

@@ -1,154 +1,158 @@
 # ShaderToy Cloner
 
-Servidor local para clonar y reproducir shaders de [ShaderToy](https://www.shadertoy.com), diseñado para usarse como fondo de pantalla animado con **[Lively Wallpaper](https://www.rocksdanister.com/lively/)**.
+> 🌐 [Versión en español](README.es.md)
 
-Evita las restricciones de Cloudflare sirviendo los shaders desde `localhost`, con soporte para shaders multipaso, texturas y cubemaps.
+Local server to clone and play shaders from [ShaderToy](https://www.shadertoy.com), designed to be used as an animated wallpaper with **[Lively Wallpaper](https://www.rocksdanister.com/lively/)**.
 
----
-
-## Características
-
-- Clonar shaders directamente desde la URL de ShaderToy (requiere API key)
-- Importar shaders desde un JSON exportado (sin API key)
-- Reproducción con WebGL2 compatible con el formato de ShaderToy
-- Soporte para shaders de un solo paso y multipaso (Buffer A/B/C/D → Image)
-- Proxy transparente de texturas y cubemaps desde el CDN de ShaderToy
-- Panel de control con galería de shaders clonados
-- Interfaz en modo oscuro
-- Instalación como servicio de Windows (inicio automático con el sistema)
+Bypasses Cloudflare restrictions by serving shaders from `localhost`, with support for multi-pass shaders, textures, and cubemaps.
 
 ---
 
-## Requisitos
+## Features
 
-- [Node.js](https://nodejs.org/) v18 o superior
+- Clone shaders directly from a ShaderToy URL (requires API key)
+- Import shaders from an exported JSON file (no API key needed)
+- WebGL2 playback fully compatible with the ShaderToy format
+- Support for single-pass and multi-pass shaders (Buffer A/B/C/D → Image)
+- Transparent proxy for textures and cubemaps from the ShaderToy CDN
+- Control panel with a gallery of cloned shaders
+- Dark mode interface
+- Install as a Windows service (auto-start with the system)
+- UI language switcher (English / Spanish)
+
+---
+
+## Requirements
+
+- [Node.js](https://nodejs.org/) v18 or higher
 - Windows 10/11
-- Una API key de ShaderToy _(solo para clonar vía URL; no necesaria para importar JSON)_
+- A ShaderToy API key _(only needed to clone via URL; not required for JSON import)_
 
 ---
 
-## Instalación
+## Installation
 
 ```powershell
-git clone https://github.com/tu-usuario/shadertoy-cloner.git
+git clone https://github.com/your-user/shadertoy-cloner.git
 cd shadertoy-cloner
 npm install
 ```
 
 ---
 
-## Uso
+## Usage
 
-### Iniciar manualmente
+### Start manually
 
 ```powershell
 npm start
 ```
 
-El servidor arranca en `http://localhost:7700`.
+The server starts at `http://localhost:7700`.
 
-### Configuración inicial
+### Initial setup
 
-1. Abre `http://localhost:7700` en tu navegador.
-2. Haz clic en **Settings** e introduce tu **ShaderToy API key**.
-   - Obtén tu key en [shadertoy.com/profile](https://www.shadertoy.com/profile) (requiere cuenta Gold o superior).
-3. Guarda los cambios.
+1. Open `http://localhost:7700` in your browser.
+2. Click **Settings** and enter your **ShaderToy API key**.
+   - Get your key at [shadertoy.com/profile](https://www.shadertoy.com/profile) (requires a Gold account or higher).
+3. Save the changes.
 
-### Clonar un shader
+### Clone a shader
 
-- **Vía URL**: pega la URL de ShaderToy en el campo de clonado (requiere API key).
-- **Vía JSON**: exporta el shader desde ShaderToy y usa la opción de importar JSON (no requiere API key).
+- **Via URL**: paste the ShaderToy URL into the clone field (requires API key).
+- **Via JSON**: export the shader from ShaderToy and use the Import JSON option (no API key required).
 
-### Usar con Lively Wallpaper
+### Use with Lively Wallpaper
 
-1. En el panel de control, copia la URL del shader que aparece bajo su miniatura.
-2. En Lively Wallpaper, selecciona **"Agregar fondo de pantalla"** → **"URL/Web"** y pega la URL copiada.
+1. In the control panel, copy the URL of the shader shown below its thumbnail.
+2. In Lively Wallpaper, select **"Add wallpaper"** → **"URL/Web"** and paste the copied URL.
 
 ---
 
-## Instalar como servicio de Windows
+## Install as a Windows service
 
-Para que el servidor arranque automáticamente con Windows, sin necesidad de mantener una terminal abierta:
+To have the server start automatically with Windows, without needing to keep a terminal open:
 
-> **Requisito**: ejecutar como **Administrador**
+> **Requirement**: run as **Administrator**
 
 ```powershell
-# Abrir PowerShell como Administrador y ejecutar:
+# Open PowerShell as Administrator and run:
 node install-service.js
 ```
 
-Esto registra el servicio **"ShaderToy Cloner"** en Windows con las siguientes características:
+This registers the **"ShaderToy Cloner"** service in Windows with the following settings:
 
-| Parámetro | Valor |
+| Parameter | Value |
 |---|---|
-| Nombre del servicio | `ShaderToy Cloner` |
-| Puerto | `7700` |
-| Inicio automático | Sí (con el sistema) |
-| Reinicio ante fallos | Sí (hasta 5 intentos) |
-| Entorno | `NODE_ENV=production` |
+| Service name | `ShaderToy Cloner` |
+| Port | `7700` |
+| Auto-start | Yes (with the system) |
+| Restart on failure | Yes (up to 5 attempts) |
+| Environment | `NODE_ENV=production` |
 
-### Verificar que el servicio está activo
+### Verify the service is running
 
 ```powershell
 Get-Service -Name "ShaderToy Cloner"
 ```
 
-### Desinstalar el servicio
+### Uninstall the service
 
 ```powershell
-# Abrir PowerShell como Administrador y ejecutar:
+# Open PowerShell as Administrator and run:
 node uninstall-service.js
 ```
 
 ---
 
-## Estructura del proyecto
+## Project structure
 
 ```
 shadertoy-cloner/
-├── server.js               # Servidor Express (punto de entrada)
-├── install-service.js      # Instalador del servicio Windows
-├── uninstall-service.js    # Desinstalador del servicio Windows
+├── server.js               # Express server (entry point)
+├── install-service.js      # Windows service installer
+├── uninstall-service.js    # Windows service uninstaller
 ├── package.json
 ├── public/
-│   ├── index.html          # Panel de control
-│   ├── player.html         # Reproductor de shaders
+│   ├── index.html          # Control panel
+│   ├── player.html         # Shader player
 │   ├── js/
-│   │   ├── app.js          # Lógica del panel de control
-│   │   └── renderer.js     # Motor de renderizado WebGL2
+│   │   ├── i18n.js         # Internationalization (EN/ES)
+│   │   ├── app.js          # Control panel logic
+│   │   └── renderer.js     # WebGL2 rendering engine
 │   └── css/
 │       └── style.css
 └── data/
-    ├── settings.json       # Configuración (API key, puerto)
-    └── shaders/            # Shaders clonados (JSON)
+    ├── settings.json       # Configuration (API key, port)
+    └── shaders/            # Cloned shaders (JSON)
 ```
 
 ---
 
-## API REST
+## REST API
 
-| Método | Ruta | Descripción |
+| Method | Route | Description |
 |---|---|---|
-| `GET` | `/api/settings` | Obtener configuración actual |
-| `POST` | `/api/settings` | Actualizar configuración |
-| `GET` | `/api/shaders` | Listar shaders clonados |
-| `GET` | `/api/shaders/:id` | Obtener datos de un shader |
-| `DELETE` | `/api/shaders/:id` | Eliminar un shader |
-| `POST` | `/api/clone` | Clonar shader desde URL |
-| `POST` | `/api/import` | Importar shader desde JSON |
-| `GET` | `/proxy/*` | Proxy de recursos del CDN de ShaderToy |
-| `GET` | `/shader/:id` | Página del reproductor de un shader |
+| `GET` | `/api/settings` | Get current configuration |
+| `POST` | `/api/settings` | Update configuration |
+| `GET` | `/api/shaders` | List cloned shaders |
+| `GET` | `/api/shaders/:id` | Get shader data |
+| `DELETE` | `/api/shaders/:id` | Delete a shader |
+| `POST` | `/api/clone` | Clone shader from URL |
+| `POST` | `/api/import` | Import shader from JSON |
+| `GET` | `/proxy/*` | Proxy for ShaderToy CDN resources |
+| `GET` | `/shader/:id` | Shader player page |
 
 ---
 
-## Stack tecnológico
+## Tech stack
 
 - **Backend**: Node.js, Express, Axios, fs-extra
 - **Frontend**: JavaScript (ES6+), WebGL2, HTML5/CSS3
-- **Servicio Windows**: node-windows
+- **Windows service**: node-windows
 
 ---
 
-## Licencia
+## License
 
 MIT

@@ -32,7 +32,7 @@ function getPlayerUrl(id) {
 
 // ── Shader list ───────────────────────────────────────────────────────────────
 
-const grid      = $('shader-grid');
+const grid       = $('shader-grid');
 const countBadge = $('shader-count');
 const emptyState = $('empty-state');
 const tpl        = $('tpl-shader-card');
@@ -48,6 +48,14 @@ const CHANNEL_LABELS = {
   webcam:  'Cam',
 };
 
+// Replaces all text nodes in a button while keeping the SVG icon intact
+function setBtnText(btn, text) {
+  const svg = btn.querySelector('svg');
+  btn.innerHTML = '';
+  if (svg) btn.appendChild(svg);
+  btn.append(document.createTextNode('\u00A0' + text));
+}
+
 function renderCard(shader) {
   const clone = tpl.content.cloneNode(true);
   const card = clone.querySelector('.shader-card');
@@ -58,6 +66,7 @@ function renderCard(shader) {
 
   const playBtn = card.querySelector('.card-btn-play');
   playBtn.href = getPlayerUrl(shader.id);
+  setBtnText(playBtn, t('card.open'));
 
   if (shader.hasMultiPass) {
     card.querySelector('.card-badge-multipass').classList.remove('hidden');
@@ -66,28 +75,36 @@ function renderCard(shader) {
   const chanEl = card.querySelector('.card-channels');
   if (shader.channelTypes && shader.channelTypes.length) {
     chanEl.textContent = shader.channelTypes
-      .map(t => CHANNEL_LABELS[t] || t)
+      .map(type => CHANNEL_LABELS[type] || type)
       .join(' · ');
   }
 
   card.querySelector('.card-title').textContent  = shader.name;
-  card.querySelector('.card-author').textContent = `por ${shader.author}`;
+  card.querySelector('.card-author').textContent = `${t('card.by')} ${shader.author}`;
   const desc = (shader.description || '').replace(/<[^>]+>/g, '');
   card.querySelector('.card-desc').textContent   = desc.length > 100
     ? desc.slice(0, 100) + '…'
     : desc;
 
-  card.querySelector('.card-btn-copy').addEventListener('click', () => {
+  const copyBtn = card.querySelector('.card-btn-copy');
+  copyBtn.title = t('card.copy.title');
+  setBtnText(copyBtn, t('card.copy'));
+
+  const deleteBtn = card.querySelector('.card-btn-delete');
+  deleteBtn.title = t('card.delete.title');
+  setBtnText(deleteBtn, t('card.delete'));
+
+  copyBtn.addEventListener('click', () => {
     navigator.clipboard.writeText(getPlayerUrl(shader.id)).then(() => {
-      toast('URL copiada al portapapeles', 'success');
+      toast(t('toast.url.copied'), 'success');
     });
   });
 
-  card.querySelector('.card-btn-delete').addEventListener('click', async () => {
-    if (!confirm(`¿Eliminar "${shader.name}"?`)) return;
+  deleteBtn.addEventListener('click', async () => {
+    if (!confirm(t('toast.delete.confirm', { name: shader.name }))) return;
     try {
       await apiFetch(`/api/shaders/${shader.id}`, { method: 'DELETE' });
-      toast(`"${shader.name}" eliminado`, 'info');
+      toast(t('toast.deleted', { name: shader.name }), 'info');
       loadShaders();
     } catch (err) {
       toast(`Error: ${err.message}`, 'error');
@@ -113,34 +130,37 @@ async function loadShaders() {
       }
     }
   } catch (err) {
-    toast(`Error cargando shaders: ${err.message}`, 'error');
+    toast(`Error: ${err.message}`, 'error');
   }
 }
 
+// Re-render cards when language changes
+window.addEventListener('langchange', loadShaders);
+
 // ── Tabs (URL vs Import) ──────────────────────────────────────────────────────
 
-const tabUrl    = $('tab-url');
-const tabImport = $('tab-import');
-const panelUrl  = $('panel-url');
+const tabUrl      = $('tab-url');
+const tabImport   = $('tab-import');
+const panelUrl    = $('panel-url');
 const panelImport = $('panel-import');
 
 tabUrl.addEventListener('click', () => {
-  tabUrl.classList.add('active');    tabUrl.setAttribute('aria-selected', 'true');
+  tabUrl.classList.add('active');       tabUrl.setAttribute('aria-selected', 'true');
   tabImport.classList.remove('active'); tabImport.setAttribute('aria-selected', 'false');
   panelUrl.classList.remove('hidden');
   panelImport.classList.add('hidden');
 });
 tabImport.addEventListener('click', () => {
-  tabImport.classList.add('active');    tabImport.setAttribute('aria-selected', 'true');
-  tabUrl.classList.remove('active'); tabUrl.setAttribute('aria-selected', 'false');
+  tabImport.classList.add('active');  tabImport.setAttribute('aria-selected', 'true');
+  tabUrl.classList.remove('active');  tabUrl.setAttribute('aria-selected', 'false');
   panelImport.classList.remove('hidden');
   panelUrl.classList.add('hidden');
 });
 
 // ── Clone ─────────────────────────────────────────────────────────────────────
 
-const inputUrl   = $('input-url');
-const btnClone   = $('btn-clone');
+const inputUrl    = $('input-url');
+const btnClone    = $('btn-clone');
 const cloneStatus = $('clone-status');
 
 function setCloneStatus(msg, type) {
@@ -148,29 +168,36 @@ function setCloneStatus(msg, type) {
   cloneStatus.className   = `clone-status clone-status-${type}`;
 }
 
+function resetCloneButton() {
+  btnClone.disabled = false;
+  btnClone.innerHTML =
+    `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <path d="M12 5v14M5 12h14"/>
+    </svg> ${t('clone.url.button')}`;
+}
+
 btnClone.addEventListener('click', async () => {
   const url = inputUrl.value.trim();
   if (!url) { inputUrl.focus(); return; }
 
-  btnClone.disabled  = true;
-  btnClone.textContent = 'Clonando…';
-  setCloneStatus('Contactando con la API de ShaderToy…', 'loading');
+  btnClone.disabled    = true;
+  btnClone.textContent = t('clone.url.button') + '…';
+  setCloneStatus(t('toast.cloning.contact'), 'loading');
 
   try {
     const { name, id } = await apiFetch('/api/clone', {
       method: 'POST',
       body: JSON.stringify({ url }),
     });
-    setCloneStatus(`✓ "${name}" clonado correctamente (${id})`, 'success');
+    setCloneStatus(t('toast.cloned.ok', { name, id }), 'success');
     inputUrl.value = '';
-    toast(`"${name}" clonado`, 'success');
+    toast(t('toast.cloned', { name }), 'success');
     loadShaders();
   } catch (err) {
     setCloneStatus(`✗ ${err.message}`, 'error');
     toast(`Error: ${err.message}`, 'error');
   } finally {
-    btnClone.disabled = false;
-    btnClone.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg> Clonar`;
+    resetCloneButton();
   }
 });
 
@@ -182,28 +209,28 @@ $('btn-refresh').addEventListener('click', loadShaders);
 
 // ── Import JSON ───────────────────────────────────────────────────────────────
 
-const dropZone     = $('drop-zone');
+const dropZone      = $('drop-zone');
 const inputJsonFile = $('input-json-file');
-const dropLabel    = $('drop-label');
+const dropLabel     = $('drop-label');
 
 async function importShaderJson(jsonText, filename) {
   let parsed;
   try {
     parsed = JSON.parse(jsonText);
   } catch {
-    setCloneStatus('✗ El archivo no es un JSON válido.', 'error');
+    setCloneStatus(t('toast.invalid.json'), 'error');
     return;
   }
 
-  setCloneStatus(`Importando ${filename || 'shader'}…`, 'loading');
+  setCloneStatus(t('toast.importing', { filename: filename || 'shader' }), 'loading');
   try {
     const { name, id } = await apiFetch('/api/import', {
       method: 'POST',
       body: JSON.stringify(parsed),
     });
-    setCloneStatus(`✓ "${name}" importado correctamente (${id})`, 'success');
-    dropLabel.textContent = 'Arrastra un shader_XXXXXX.json o haz clic';
-    toast(`"${name}" importado`, 'success');
+    setCloneStatus(t('toast.imported.ok', { name, id }), 'success');
+    dropLabel.innerHTML = t('clone.import.drop');
+    toast(t('toast.imported', { name }), 'success');
     loadShaders();
   } catch (err) {
     setCloneStatus(`✗ ${err.message}`, 'error');
@@ -239,18 +266,18 @@ dropZone.addEventListener('drop', e => {
 
 // ── Settings modal ────────────────────────────────────────────────────────────
 
-const modalSettings   = $('modal-settings');
-const inputApiKey     = $('input-apikey');
-const inputPort       = $('input-port');
-const baseUrlEl       = $('base-url');
+const modalSettings = $('modal-settings');
+const inputApiKey   = $('input-apikey');
+const inputPort     = $('input-port');
+const baseUrlEl     = $('base-url');
 
 async function openSettings() {
   try {
     const s = await apiFetch('/api/settings');
-    inputApiKey.value  = '';
+    inputApiKey.value = '';
     inputApiKey.placeholder = s.apiKeyConfigured
-      ? '••••••••  (ya configurada — deja en blanco para conservar)'
-      : 'Tu clave API de shadertoy.com';
+      ? t('settings.apikey.configured')
+      : t('settings.apikey.placeholder');
     inputPort.value = s.port || 7700;
     baseUrlEl.textContent = `${location.origin}/shader/`;
   } catch (_) {}
@@ -272,7 +299,7 @@ $('save-settings').addEventListener('click', async () => {
   try {
     await apiFetch('/api/settings', { method: 'POST', body: JSON.stringify(body) });
     modalSettings.classList.add('hidden');
-    toast('Configuración guardada', 'success');
+    toast(t('toast.settings.saved'), 'success');
   } catch (err) {
     toast(`Error: ${err.message}`, 'error');
   }
@@ -280,13 +307,19 @@ $('save-settings').addEventListener('click', async () => {
 
 $('btn-copy-base').addEventListener('click', () => {
   navigator.clipboard.writeText(baseUrlEl.textContent).then(() => {
-    toast('URL base copiada', 'success');
+    toast(t('toast.base.copied'), 'success');
   });
 });
 
 // Close modal clicking outside
 modalSettings.addEventListener('click', e => {
   if (e.target === modalSettings) modalSettings.classList.add('hidden');
+});
+
+// ── Language switcher ─────────────────────────────────────────────────────────
+
+$('btn-lang').addEventListener('click', () => {
+  setLang(getLang() === 'en' ? 'es' : 'en');
 });
 
 // ── Init ──────────────────────────────────────────────────────────────────────

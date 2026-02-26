@@ -100,7 +100,7 @@ function normalizeShaderJson(raw) {
   if (raw && raw.ver && raw.info && raw.renderpass) {
     return { Shader: raw }; // bare export format
   }
-  throw new Error('Formato de JSON no reconocido. Exporta el shader desde ShaderToy y vuelve a intentarlo.');
+  throw new Error('Unrecognized JSON format. Export the shader from ShaderToy and try again.');
 }
 
 app.post('/api/import', (req, res) => {
@@ -109,7 +109,7 @@ app.post('/api/import', (req, res) => {
     const info = normalized.Shader.info;
 
     if (!info || !info.id) {
-      return res.status(400).json({ error: 'El JSON no contiene un campo info.id válido.' });
+      return res.status(400).json({ error: 'The JSON does not contain a valid info.id field.' });
     }
 
     normalized._clonedAt = new Date().toISOString();

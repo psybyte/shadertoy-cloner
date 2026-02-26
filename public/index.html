@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -16,14 +16,21 @@
         <circle cx="14" cy="14" r="3" fill="#fff" opacity="0.9"/>
       </svg>
       <span class="header-title">ShaderToy Cloner</span>
-      <span class="header-sub">servidor local · Lively Wallpaper</span>
+      <span class="header-sub" data-i18n="header.subtitle">local server · Lively Wallpaper</span>
     </div>
     <nav class="header-nav">
-      <button class="btn btn-ghost" id="btn-settings" title="Configuración">
+      <button class="btn btn-ghost btn-sm" id="btn-lang" data-i18n-title="header.lang" title="ES">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+        </svg>
+        <span data-i18n="header.lang">ES</span>
+      </button>
+      <button class="btn btn-ghost" id="btn-settings" data-i18n-title="header.settings.title" title="Settings">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
         </svg>
-        Configuración
+        <span data-i18n="header.settings">Settings</span>
       </button>
     </nav>
   </header>
@@ -34,17 +41,17 @@
     <!-- Add Shader bar -->
     <section class="add-section">
       <div class="add-card">
-        <h2 class="add-title">Clonar shader</h2>
-        <p class="add-hint">Pega la URL de un shader público de ShaderToy y se almacenará en local.</p>
+        <h2 class="add-title" data-i18n="clone.title">Clone shader</h2>
+        <p class="add-hint" data-i18n="clone.hint">Paste the URL of a public ShaderToy shader to store it locally.</p>
         <!-- Tab selector -->
         <div class="add-tabs" role="tablist">
-          <button class="add-tab active" id="tab-url" role="tab" aria-selected="true" aria-controls="panel-url">Via API URL</button>
-          <button class="add-tab" id="tab-import" role="tab" aria-selected="false" aria-controls="panel-import">Importar JSON</button>
+          <button class="add-tab active" id="tab-url" role="tab" aria-selected="true" aria-controls="panel-url" data-i18n="clone.tab.url">Via API URL</button>
+          <button class="add-tab" id="tab-import" role="tab" aria-selected="false" aria-controls="panel-import" data-i18n="clone.tab.import">Import JSON</button>
         </div>
 
         <!-- Panel: clone via URL -->
         <div id="panel-url" class="add-panel" role="tabpanel">
-          <p class="add-hint">Requiere API Key de ShaderToy (perfil Gold o superior).</p>
+          <p class="add-hint" data-i18n="clone.url.hint">Requires a ShaderToy API Key (Gold account or higher).</p>
           <div class="add-form">
             <input
               id="input-url"
@@ -57,22 +64,22 @@
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                 <path d="M12 5v14M5 12h14"/>
               </svg>
-              Clonar
+              <span data-i18n="clone.url.button">Clone</span>
             </button>
           </div>
         </div>
 
         <!-- Panel: import exported JSON -->
         <div id="panel-import" class="add-panel hidden" role="tabpanel">
-          <p class="add-hint">
-            En shadertoy.com abre tu shader → menú ··· → <strong>Export</strong>. Arrastra el <code>.json</code> aquí o haz clic para seleccionarlo.
+          <p class="add-hint" data-i18n-html="clone.import.hint">
+            On shadertoy.com open your shader → ··· menu → <strong>Export</strong>. Drag the <code>.json</code> here or click to select it.
           </p>
           <label id="drop-zone" class="drop-zone" for="input-json-file">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".5">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
               <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
             </svg>
-            <span id="drop-label">Arrastra un <code>shader_XXXXXX.json</code> o haz clic</span>
+            <span id="drop-label" data-i18n-html="clone.import.drop">Drag a <code>shader_XXXXXX.json</code> or click</span>
             <input id="input-json-file" type="file" accept=".json,application/json" style="display:none" />
           </label>
         </div>
@@ -84,13 +91,16 @@
     <!-- Shader gallery -->
     <section class="gallery-section">
       <div class="gallery-header">
-        <h2 class="section-title">Shaders clonados <span id="shader-count" class="badge">0</span></h2>
-        <button class="btn btn-ghost btn-sm" id="btn-refresh" title="Actualizar">
+        <h2 class="section-title">
+          <span data-i18n="gallery.title">Cloned shaders</span>
+          <span id="shader-count" class="badge">0</span>
+        </h2>
+        <button class="btn btn-ghost btn-sm" id="btn-refresh" data-i18n-title="gallery.refresh.title" title="Refresh">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
             <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
           </svg>
-          Actualizar
+          <span data-i18n="gallery.refresh">Refresh</span>
         </button>
       </div>
 
@@ -100,8 +110,8 @@
           <path d="M20 32 Q32 16 44 32 Q32 48 20 32Z" fill="#3a3a5c"/>
           <circle cx="32" cy="32" r="6" fill="#3a3a5c"/>
         </svg>
-        <p>No hay shaders clonados todavía.</p>
-        <p class="empty-sub">Pega una URL arriba para empezar.</p>
+        <p data-i18n="gallery.empty">No cloned shaders yet.</p>
+        <p class="empty-sub" data-i18n="gallery.empty.sub">Paste a URL above to get started.</p>
       </div>
 
       <div id="shader-grid" class="shader-grid"></div>
@@ -112,36 +122,39 @@
   <div id="modal-settings" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title-settings">
     <div class="modal">
       <div class="modal-header">
-        <h3 id="modal-title-settings">Configuración</h3>
-        <button class="btn-close" id="close-settings" aria-label="Cerrar">×</button>
+        <h3 id="modal-title-settings" data-i18n="settings.title">Settings</h3>
+        <button class="btn-close" id="close-settings" data-i18n-aria-label="settings.close.label" aria-label="Close">×</button>
       </div>
       <div class="modal-body">
         <div class="form-group">
-          <label class="form-label" for="input-apikey">ShaderToy API Key</label>
-          <input id="input-apikey" class="form-input" type="password" placeholder="Tu clave API de shadertoy.com" autocomplete="off" />
-          <p class="form-hint">
-            Obtén tu clave en
+          <label class="form-label" for="input-apikey" data-i18n="settings.apikey.label">ShaderToy API Key</label>
+          <input id="input-apikey" class="form-input" type="password"
+            data-i18n-placeholder="settings.apikey.placeholder"
+            placeholder="Your shadertoy.com API key"
+            autocomplete="off" />
+          <p class="form-hint" data-i18n-html="settings.apikey.hint">
+            Get your key at
             <a href="https://www.shadertoy.com/profile" target="_blank" rel="noopener">shadertoy.com/profile</a>
-            → sección <em>Apps</em> → <em>Add an application</em>.<br/>
-            Solo funciona con shaders <strong>públicos</strong>.
+            → <em>Apps</em> section → <em>Add an application</em>.<br/>
+            Only works with <strong>public</strong> shaders.
           </p>
         </div>
         <div class="form-group">
-          <label class="form-label" for="input-port">Puerto del servidor</label>
+          <label class="form-label" for="input-port" data-i18n="settings.port.label">Server port</label>
           <input id="input-port" class="form-input" type="number" min="1024" max="65535" value="7700" />
-          <p class="form-hint">Reinicia el servicio para que el cambio de puerto tenga efecto.</p>
+          <p class="form-hint" data-i18n="settings.port.hint">Restart the service for port changes to take effect.</p>
         </div>
         <div class="form-group">
-          <label class="form-label">URL base para Lively Wallpaper</label>
+          <label class="form-label" data-i18n="settings.baseurl.label">Base URL for Lively Wallpaper</label>
           <div class="copy-row">
             <code id="base-url" class="code-block">http://localhost:7700/shader/</code>
-            <button class="btn btn-ghost btn-sm" id="btn-copy-base">Copiar</button>
+            <button class="btn btn-ghost btn-sm" id="btn-copy-base" data-i18n="settings.copy">Copy</button>
           </div>
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-ghost" id="cancel-settings">Cancelar</button>
-        <button class="btn btn-primary" id="save-settings">Guardar</button>
+        <button class="btn btn-ghost" id="cancel-settings" data-i18n="settings.cancel">Cancel</button>
+        <button class="btn btn-primary" id="save-settings" data-i18n="settings.save">Save</button>
       </div>
     </div>
   </div>
@@ -154,7 +167,7 @@
         <div class="card-thumb-overlay">
           <a class="btn btn-primary btn-sm card-btn-play" target="_blank" rel="noopener">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-            Abrir en Lively
+            Open in Lively
           </a>
         </div>
       </div>
@@ -167,17 +180,17 @@
         <p class="card-author"></p>
         <p class="card-desc"></p>
         <div class="card-actions">
-          <button class="btn btn-ghost btn-sm card-btn-copy" title="Copiar URL para Lively">
+          <button class="btn btn-ghost btn-sm card-btn-copy" title="Copy URL for Lively">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
             </svg>
-            Copiar URL
+            Copy URL
           </button>
-          <button class="btn btn-danger btn-sm card-btn-delete" title="Eliminar shader">
+          <button class="btn btn-danger btn-sm card-btn-delete" title="Delete shader">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
             </svg>
-            Eliminar
+            Delete
           </button>
         </div>
       </div>
@@ -187,6 +200,7 @@
   <!-- ── Toast ── -->
   <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 
+  <script src="/js/i18n.js"></script>
   <script src="/js/app.js"></script>
 </body>
 </html>

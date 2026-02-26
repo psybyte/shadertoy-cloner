@@ -260,7 +260,7 @@ class ShaderRenderer {
       antialias: false,
       preserveDrawingBuffer: false,
     });
-    if (!gl) throw new Error('WebGL2 no disponible en este navegador.');
+    if (!gl) throw new Error(typeof t === 'function' ? t('renderer.no.webgl2') : 'WebGL2 is not available in this browser.');
 
     // Check float texture support
     gl.getExtension('EXT_color_buffer_float');
@@ -295,7 +295,7 @@ class ShaderRenderer {
     const soundPasses  = renderpass.filter(p => p.type === 'sound');   // ignored for now
     const imagePass    = renderpass.find(p => p.type === 'image');
 
-    if (!imagePass) throw new Error('El shader no tiene pass de tipo "image".');
+    if (!imagePass) throw new Error(typeof t === 'function' ? t('renderer.no.image.pass') : 'The shader has no pass of type "image".');
 
     // Build dynamic output-id → slot map (handles both API and export formats)
     const outSlotMap = buildOutputSlotMap(bufferPasses);

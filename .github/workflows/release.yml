@@ -35,16 +35,26 @@ jobs:
       - name: Build standalone server executable
         run: npx pkg server.js --targets node20-win-x64 --assets "public/**/*" --output dist/shadertoy-cloner.exe
 
-      # ── Download NSSM (service wrapper) ──────────────────────────────────────
-      - name: Download and extract NSSM
+      # ── Get NSSM (service wrapper) ────────────────────────────────────────────
+      - name: Get NSSM binary
         shell: pwsh
         run: |
-          $nssmUrl = "https://nssm.cc/release/nssm-2.24.zip"
-          $zipPath  = "$env:TEMP\nssm.zip"
-          Invoke-WebRequest -Uri $nssmUrl -OutFile $zipPath -UseBasicParsing
-          Expand-Archive -Path $zipPath -DestinationPath "$env:TEMP\nssm-extract" -Force
-          Copy-Item "$env:TEMP\nssm-extract\nssm-2.24\win64\nssm.exe" -Destination "installer\nssm.exe"
-          Write-Host "NSSM copied to installer\nssm.exe"
+          choco install nssm --no-progress -y
+          # Chocolatey extracts the real binary under lib\NSSM\tools\
+          $nssmExe = "$env:ChocolateyInstall\lib\NSSM\tools\nssm.exe"
+          if (-not (Test-Path $nssmExe)) {
+            # Fallback: search the lib folder recursively
+            $nssmExe = Get-ChildItem "$env:ChocolateyInstall\lib\NSSM" -Recurse -Filter "nssm.exe" |
+                       Where-Object { $_.Directory.Name -eq "win64" -or $_.Directory.Name -eq "tools" } |
+                       Select-Object -First 1 -ExpandProperty FullName
+          }
+          if (-not $nssmExe -or -not (Test-Path $nssmExe)) {
+            Write-Error "Could not locate nssm.exe after Chocolatey install"
+            Get-ChildItem "$env:ChocolateyInstall\lib\NSSM" -Recurse | Select-Object FullName
+            exit 1
+          }
+          Copy-Item $nssmExe -Destination "installer\nssm.exe"
+          Write-Host "NSSM copied from $nssmExe"
 
       # ── Extract version from tag ──────────────────────────────────────────────
       - name: Extract version from tag
@@ -59,6 +69,7 @@ jobs:
 
       # ── Build NSIS installer ──────────────────────────────────────────────────
       - name: Install NSIS
+        shell: pwsh
         run: choco install nsis --no-progress -y
 
       - name: Build NSIS installer

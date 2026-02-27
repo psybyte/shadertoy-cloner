@@ -8,6 +8,19 @@ Bypasses Cloudflare restrictions by serving shaders from `localhost`, with suppo
 
 ---
 
+> **Windows Defender false positive**
+>
+> The installer and bundled `.exe` may be flagged by Windows Defender as `Trojan:Win32/Bearfoos.B!ml`.
+> This is a **known false positive** caused by the way `pkg` bundles the Node.js runtime and server code into a single executable — a pattern that heuristic scanners sometimes misidentify.
+>
+> The full source code of this project is available here for review. The release binaries are built transparently via [GitHub Actions](.github/workflows/release.yml) directly from this repository with no manual steps.
+>
+> If you prefer not to trust the pre-built binary, you can [run from source](#run-from-source-no-installer) instead.
+>
+> To allow the installer to run: open **Windows Security → Virus & threat protection → Protection history**, find the quarantined item, and choose **Allow**.
+
+---
+
 ## Features
 
 - Clone shaders directly from a ShaderToy URL (requires API key)
@@ -32,10 +45,21 @@ Bypasses Cloudflare restrictions by serving shaders from `localhost`, with suppo
 
 ## Installation
 
+### Windows installer (recommended)
+
+Download `ShaderToy-Cloner-Setup-x.x.x.exe` from the [latest release](../../releases/latest) and run it as Administrator. It installs the app as a Windows service that starts automatically with Windows.
+
+> See the note above if Windows Defender flags the installer.
+
+### Run from source (no installer)
+
+If you prefer to run directly from source without a pre-built binary:
+
 ```powershell
 git clone https://github.com/your-user/shadertoy-cloner.git
 cd shadertoy-cloner
 npm install
+npm start
 ```
 
 ---

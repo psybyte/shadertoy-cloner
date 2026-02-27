@@ -16,7 +16,10 @@ const SHADERS_DIR  = path.join(DATA_DIR, 'shaders');
 const SETTINGS_FILE = path.join(DATA_DIR, 'settings.json');
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+// Use BASE_DIR (real filesystem) so express.static works both in development
+// and when running as a pkg-bundled exe (pkg's virtual fs does not support
+// fs.createReadStream, which express.static requires for streaming files).
+app.use(express.static(path.join(BASE_DIR, 'public')));
 
 fs.ensureDirSync(SHADERS_DIR);
 
@@ -208,7 +211,7 @@ app.get('/proxy/*', async (req, res) => {
 // ── Player route (SPA fallback) ───────────────────────────────────────────────
 
 app.get('/shader/:id', (_req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'player.html'));
+  res.sendFile(path.join(BASE_DIR, 'public', 'player.html'));
 });
 
 // ── Start ─────────────────────────────────────────────────────────────────────

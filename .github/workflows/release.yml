@@ -33,7 +33,7 @@ jobs:
 
       # ── Build standalone exe ─────────────────────────────────────────────────
       - name: Build standalone server executable
-        run: npx pkg server.js --targets node20-win-x64 --assets "public/**/*" --output dist/shadertoy-cloner.exe
+        run: npx pkg server.js --targets node20-win-x64 --output dist/shadertoy-cloner.exe
 
       # ── Get NSSM (service wrapper) ────────────────────────────────────────────
       - name: Get NSSM binary
@@ -80,8 +80,11 @@ jobs:
           # Stage all source files inside installer\ so NSIS can use plain
           # relative paths with no ".." navigation (NSIS does not normalise
           # paths containing ".." and CWD is set to the .nsi file's folder).
-          Copy-Item "icon.ico"                    -Destination "installer\icon.ico"        -Force
+          Copy-Item "icon.ico"                    -Destination "installer\icon.ico"             -Force
           Copy-Item "dist\shadertoy-cloner.exe"   -Destination "installer\shadertoy-cloner.exe" -Force
+          # public\ is installed as real files next to the exe so that
+          # express.static (which uses fs.createReadStream) works at runtime.
+          Copy-Item "public" -Destination "installer\public" -Recurse -Force
 
           # Chocolatey does not refresh PATH in the same shell session.
           # NOTE: curly braces are required for env vars that contain parentheses.

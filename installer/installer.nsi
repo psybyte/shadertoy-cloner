@@ -101,6 +101,12 @@ Section "Install" SecMain
   File "nssm.exe"
   File "icon.ico"
 
+  ; ── Copy public\ web assets (express.static reads from real filesystem) ─────
+
+  SetOutPath "$INSTDIR\public"
+  File /r "public\"
+  SetOutPath "$INSTDIR"
+
   ; ── Create data directories ─────────────────────────────────────────────────
 
   CreateDirectory "$INSTDIR\data"
@@ -124,14 +130,14 @@ Section "Install" SecMain
 
   CreateDirectory "$SMPROGRAMS\${APP_NAME}"
   CreateShortcut "$SMPROGRAMS\${APP_NAME}\${APP_NAME}.lnk" \
-    "explorer.exe" "${APP_URL}" "$INSTDIR\icon.ico" 0
+    "$WINDIR\explorer.exe" "${APP_URL}" "$INSTDIR\icon.ico" 0
   CreateShortcut "$SMPROGRAMS\${APP_NAME}\Uninstall ${APP_NAME}.lnk" \
     "$INSTDIR\Uninstall.exe"
 
   ; ── Desktop shortcut ────────────────────────────────────────────────────────
 
   CreateShortcut "$DESKTOP\${APP_NAME}.lnk" \
-    "explorer.exe" "${APP_URL}" "$INSTDIR\icon.ico" 0
+    "$WINDIR\explorer.exe" "${APP_URL}" "$INSTDIR\icon.ico" 0
 
   ; ── Write uninstaller ───────────────────────────────────────────────────────
 
@@ -179,6 +185,9 @@ Section "Uninstall"
   Delete "$INSTDIR\service.log"
   Delete "$INSTDIR\service-error.log"
   Delete "$INSTDIR\Uninstall.exe"
+
+  ; Remove web assets folder.
+  RMDir /r "$INSTDIR\public"
 
   ; Data folder is intentionally kept so shaders and settings are preserved.
   ; Users can delete %PROGRAMFILES%\ShaderToy Cloner\data manually if desired.
